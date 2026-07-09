@@ -2,6 +2,7 @@ package com.badminton_manager.badminton.service.player;
 
 import com.badminton_manager.badminton.dto.player.PlayerRequestDTO;
 import com.badminton_manager.badminton.dto.player.PlayerResponseDTO;
+import com.badminton_manager.badminton.enums.SkillLevel;
 import com.badminton_manager.badminton.exception.ResourceNotFoundException;
 import com.badminton_manager.badminton.model.CompetitionCourt;
 import com.badminton_manager.badminton.model.Player;
@@ -46,6 +47,7 @@ public class PlayerServiceImpl implements PlayerService {
         player.setCourt(court);
         player.setName(request.getName());
         player.setTeam(request.getTeam());
+        player.setSkill(request.getSkill() != null ? request.getSkill() : SkillLevel.B);
 
         return toResponse(playerRepository.save(player));
     }
@@ -62,6 +64,7 @@ public class PlayerServiceImpl implements PlayerService {
         }
         if (request.getName() != null) player.setName(request.getName());
         if (request.getTeam() != null) player.setTeam(request.getTeam());
+        if (request.getSkill() != null) player.setSkill(request.getSkill());
 
         return toResponse(playerRepository.save(player));
     }
@@ -81,6 +84,7 @@ public class PlayerServiceImpl implements PlayerService {
         dto.setCourtNumber(player.getCourt().getCourtNumber());
         dto.setName(player.getName());
         dto.setTeam(player.getTeam());
+        dto.setSkill(player.getSkill());
         dto.setCreatedAt(player.getCreatedAt());
         return dto;
     }

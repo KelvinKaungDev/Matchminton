@@ -6,7 +6,10 @@ import com.badminton_manager.badminton.enums.SessionStatus;
 import com.badminton_manager.badminton.exception.ResourceNotFoundException;
 import com.badminton_manager.badminton.model.CompetitionSession;
 import com.badminton_manager.badminton.model.User;
+import com.badminton_manager.badminton.repository.CompetitionCourtRepository;
 import com.badminton_manager.badminton.repository.CompetitionSessionRepository;
+import com.badminton_manager.badminton.repository.GameRepository;
+import com.badminton_manager.badminton.repository.PlayerRepository;
 import com.badminton_manager.badminton.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +36,15 @@ class CompetitionSessionServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private CompetitionCourtRepository courtRepository;
+
+    @Mock
+    private GameRepository gameRepository;
+
+    @Mock
+    private PlayerRepository playerRepository;
 
     @InjectMocks
     private CompetitionSessionServiceImpl sessionService;
@@ -204,6 +216,7 @@ class CompetitionSessionServiceImplTest {
     @Test
     void delete_existingId_deletesSession() {
         when(sessionRepository.existsById(sessionId)).thenReturn(true);
+        when(courtRepository.findBySessionId(sessionId)).thenReturn(List.of());
 
         sessionService.delete(sessionId);
 

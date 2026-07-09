@@ -10,6 +10,8 @@ import com.badminton_manager.badminton.model.CompetitionSession;
 import com.badminton_manager.badminton.model.User;
 import com.badminton_manager.badminton.repository.CompetitionCourtRepository;
 import com.badminton_manager.badminton.repository.CompetitionSessionRepository;
+import com.badminton_manager.badminton.repository.GameRepository;
+import com.badminton_manager.badminton.repository.PlayerRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +37,12 @@ class CompetitionCourtServiceImplTest {
 
     @Mock
     private CompetitionSessionRepository sessionRepository;
+
+    @Mock
+    private GameRepository gameRepository;
+
+    @Mock
+    private PlayerRepository playerRepository;
 
     @InjectMocks
     private CompetitionCourtServiceImpl courtService;
@@ -171,6 +179,8 @@ class CompetitionCourtServiceImplTest {
     @Test
     void delete_existingId_deletesCourt() {
         when(courtRepository.existsById(courtId)).thenReturn(true);
+        when(gameRepository.findByCourtId(courtId)).thenReturn(List.of());
+        when(playerRepository.findByCourtId(courtId)).thenReturn(List.of());
 
         courtService.delete(courtId);
 
