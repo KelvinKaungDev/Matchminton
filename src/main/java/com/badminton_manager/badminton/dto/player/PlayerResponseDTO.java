@@ -1,5 +1,6 @@
 package com.badminton_manager.badminton.dto.player;
 
+import com.badminton_manager.badminton.enums.SkillLevel;
 import com.badminton_manager.badminton.enums.Team;
 import lombok.Data;
 
@@ -13,5 +14,6 @@ public class PlayerResponseDTO {
     private int courtNumber;
     private String name;
     private Team team;
+    private SkillLevel skill;
     private Instant createdAt;
 }

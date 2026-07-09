@@ -1,5 +1,6 @@
 package com.badminton_manager.badminton.model;
 
+import com.badminton_manager.badminton.enums.RotationPlayerStatus;
 import com.badminton_manager.badminton.enums.SkillLevel;
 import com.badminton_manager.badminton.enums.Team;
 import jakarta.persistence.*;
@@ -11,8 +12,8 @@ import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "players")
-public class Player {
+@Table(name = "rotation_players")
+public class RotationPlayer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -20,19 +21,30 @@ public class Player {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "court_id", nullable = false)
-    private CompetitionCourt court;
+    @JoinColumn(name = "rotation_session_id", nullable = false)
+    private RotationSession rotationSession;
 
     @Column(nullable = false)
     private String name;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Team team;
+    private SkillLevel skill = SkillLevel.B;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "varchar(255) default 'B'")
-    private SkillLevel skill = SkillLevel.B;
+    @Column(nullable = false)
+    private RotationPlayerStatus status = RotationPlayerStatus.waiting;
+
+    @Column(name = "rounds_played", nullable = false)
+    private int roundsPlayed = 0;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "court_id")
+    private RotationCourt court;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private Team team;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

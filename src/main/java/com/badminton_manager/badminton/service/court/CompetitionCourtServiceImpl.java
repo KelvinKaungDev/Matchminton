@@ -9,7 +9,10 @@ import com.badminton_manager.badminton.model.CompetitionCourt;
 import com.badminton_manager.badminton.model.CompetitionSession;
 import com.badminton_manager.badminton.repository.CompetitionCourtRepository;
 import com.badminton_manager.badminton.repository.CompetitionSessionRepository;
+import com.badminton_manager.badminton.repository.GameRepository;
+import com.badminton_manager.badminton.repository.PlayerRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,11 +22,17 @@ public class CompetitionCourtServiceImpl implements CompetitionCourtService {
 
     private final CompetitionCourtRepository courtRepository;
     private final CompetitionSessionRepository sessionRepository;
+    private final GameRepository gameRepository;
+    private final PlayerRepository playerRepository;
 
     public CompetitionCourtServiceImpl(CompetitionCourtRepository courtRepository,
-                                       CompetitionSessionRepository sessionRepository) {
+                                       CompetitionSessionRepository sessionRepository,
+                                       GameRepository gameRepository,
+                                       PlayerRepository playerRepository) {
         this.courtRepository = courtRepository;
         this.sessionRepository = sessionRepository;
+        this.gameRepository = gameRepository;
+        this.playerRepository = playerRepository;
     }
 
     @Override
@@ -90,10 +99,13 @@ public class CompetitionCourtServiceImpl implements CompetitionCourtService {
     }
 
     @Override
+    @Transactional
     public void delete(UUID id) {
         if (!courtRepository.existsById(id)) {
             throw new ResourceNotFoundException("Court not found with id: " + id);
         }
+        gameRepository.deleteAll(gameRepository.findByCourtId(id));
+        playerRepository.deleteAll(playerRepository.findByCourtId(id));
         courtRepository.deleteById(id);
     }
 

@@ -4,11 +4,16 @@ import com.badminton_manager.badminton.dto.session.CompetitionSessionRequestDTO;
 import com.badminton_manager.badminton.dto.session.CompetitionSessionResponseDTO;
 import com.badminton_manager.badminton.enums.SessionStatus;
 import com.badminton_manager.badminton.exception.ResourceNotFoundException;
+import com.badminton_manager.badminton.model.CompetitionCourt;
 import com.badminton_manager.badminton.model.CompetitionSession;
 import com.badminton_manager.badminton.model.User;
+import com.badminton_manager.badminton.repository.CompetitionCourtRepository;
 import com.badminton_manager.badminton.repository.CompetitionSessionRepository;
+import com.badminton_manager.badminton.repository.GameRepository;
+import com.badminton_manager.badminton.repository.PlayerRepository;
 import com.badminton_manager.badminton.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -19,10 +24,20 @@ public class CompetitionSessionServiceImpl implements CompetitionSessionService 
 
     private final CompetitionSessionRepository sessionRepository;
     private final UserRepository userRepository;
+    private final CompetitionCourtRepository courtRepository;
+    private final GameRepository gameRepository;
+    private final PlayerRepository playerRepository;
 
-    public CompetitionSessionServiceImpl(CompetitionSessionRepository sessionRepository, UserRepository userRepository) {
+    public CompetitionSessionServiceImpl(CompetitionSessionRepository sessionRepository,
+                                          UserRepository userRepository,
+                                          CompetitionCourtRepository courtRepository,
+                                          GameRepository gameRepository,
+                                          PlayerRepository playerRepository) {
         this.sessionRepository = sessionRepository;
         this.userRepository = userRepository;
+        this.courtRepository = courtRepository;
+        this.gameRepository = gameRepository;
+        this.playerRepository = playerRepository;
     }
 
     @Override
@@ -102,10 +117,17 @@ public class CompetitionSessionServiceImpl implements CompetitionSessionService 
     }
 
     @Override
+    @Transactional
     public void delete(UUID id) {
         if (!sessionRepository.existsById(id)) {
             throw new ResourceNotFoundException("Competition session not found with id: " + id);
         }
+        List<CompetitionCourt> courts = courtRepository.findBySessionId(id);
+        for (CompetitionCourt court : courts) {
+            gameRepository.deleteAll(gameRepository.findByCourtId(court.getId()));
+            playerRepository.deleteAll(playerRepository.findByCourtId(court.getId()));
+        }
+        courtRepository.deleteAll(courts);
         sessionRepository.deleteById(id);
     }
 
