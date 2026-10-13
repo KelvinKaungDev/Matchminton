@@ -33,3 +33,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local env / Neon credentials ###
+.env
+.env.local
+.neon
+node_modules/

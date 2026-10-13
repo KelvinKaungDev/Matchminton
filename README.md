@@ -94,4 +94,6 @@ Service-layer tests (Mockito) and controller-layer tests (`@WebMvcTest` + MockMv
 
 - `Dockerfile` — multi-stage build (Maven build → JRE runtime image), exposes `8081`
 - `.github/workflows/ci.yml` — runs `./mvnw verify` against a Postgres service container on every push/PR to `main`
+- `GET /api/health` — public liveness endpoint for uptime pingers (keeps free hosts from sleeping)
+- `PORT` (default `8081`) and `CORS_ALLOWED_ORIGINS` (comma-separated origin patterns, default localhost) configure the deployed instance
 - Use real environment variables for `DB_URL`/`DB_USERNAME`/`DB_PASSWORD`/`JWT_SECRET` in any deployed environment — never the Docker Compose dev defaults
