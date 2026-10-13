@@ -2,11 +2,15 @@ package com.badminton_manager.badminton.service.court;
 
 import com.badminton_manager.badminton.dto.court.CompetitionCourtRequestDTO;
 import com.badminton_manager.badminton.dto.court.CompetitionCourtResponseDTO;
+import com.badminton_manager.badminton.dto.court.CompetitionCourtResultDTO;
 import com.badminton_manager.badminton.enums.CourtStatus;
 import com.badminton_manager.badminton.enums.CourtWinner;
+import com.badminton_manager.badminton.enums.Team;
+import com.badminton_manager.badminton.enums.Tier;
 import com.badminton_manager.badminton.exception.ResourceNotFoundException;
 import com.badminton_manager.badminton.model.CompetitionCourt;
 import com.badminton_manager.badminton.model.CompetitionSession;
+import com.badminton_manager.badminton.model.Player;
 import com.badminton_manager.badminton.repository.CompetitionCourtRepository;
 import com.badminton_manager.badminton.repository.CompetitionSessionRepository;
 import com.badminton_manager.badminton.repository.GameRepository;
@@ -54,6 +58,38 @@ public class CompetitionCourtServiceImpl implements CompetitionCourtService {
         return courtRepository.findByCourtCode(courtCode)
                 .map(this::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Court not found with code: " + courtCode));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CompetitionCourtResultDTO getResult(UUID id) {
+        CompetitionCourt court = courtRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Court not found with id: " + id));
+
+        CompetitionCourtResultDTO dto = new CompetitionCourtResultDTO();
+        dto.setCourtId(court.getId());
+        dto.setSessionName(court.getSession().getName());
+        dto.setCourtNumber(court.getCourtNumber());
+        dto.setStatus(court.getStatus());
+        dto.setWinner(court.getWinner());
+        dto.setPlayedAt(court.getCreatedAt());
+
+        boolean pro = court.getSession().getOrganizer().getTier() == Tier.pro;
+        dto.setShareEnabled(pro);
+        if (!pro) return dto;
+
+        List<Player> players = playerRepository.findByCourtId(id);
+        dto.setTeamAPlayers(namesOf(players, Team.teamA));
+        dto.setTeamBPlayers(namesOf(players, Team.teamB));
+        dto.setGames(gameRepository.findByCourtIdOrderByGameNumberAsc(id).stream().map(game -> {
+            CompetitionCourtResultDTO.GameScoreDTO score = new CompetitionCourtResultDTO.GameScoreDTO();
+            score.setGameNumber(game.getGameNumber());
+            score.setTeamAScore(game.getTeamAScore());
+            score.setTeamBScore(game.getTeamBScore());
+            score.setWinner(game.getWinner());
+            return score;
+        }).toList());
+        return dto;
     }
 
     @Override
@@ -107,6 +143,10 @@ public class CompetitionCourtServiceImpl implements CompetitionCourtService {
         gameRepository.deleteAll(gameRepository.findByCourtId(id));
         playerRepository.deleteAll(playerRepository.findByCourtId(id));
         courtRepository.deleteById(id);
+    }
+
+    private List<String> namesOf(List<Player> players, Team team) {
+        return players.stream().filter(p -> p.getTeam() == team).map(Player::getName).toList();
     }
 
     private CompetitionCourtResponseDTO toResponse(CompetitionCourt court) {

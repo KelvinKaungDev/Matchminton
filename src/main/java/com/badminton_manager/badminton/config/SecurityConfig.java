@@ -4,6 +4,7 @@ import com.badminton_manager.badminton.filter.RequestLoggingFilter;
 import com.badminton_manager.badminton.security.CustomUserDetailsService;
 import com.badminton_manager.badminton.security.JwtAuthenticationFilter;
 import com.badminton_manager.badminton.security.JwtService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -30,10 +31,14 @@ public class SecurityConfig {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final List<String> allowedOriginPatterns;
 
-    public SecurityConfig(JwtService jwtService, CustomUserDetailsService userDetailsService) {
+    public SecurityConfig(JwtService jwtService,
+                          CustomUserDetailsService userDetailsService,
+                          @Value("${app.cors.allowed-origin-patterns}") List<String> allowedOriginPatterns) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.allowedOriginPatterns = allowedOriginPatterns;
     }
 
     @Bean
@@ -44,7 +49,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
+        config.setAllowedOriginPatterns(allowedOriginPatterns);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
@@ -66,6 +71,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/**",
+                                "/api/health",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
