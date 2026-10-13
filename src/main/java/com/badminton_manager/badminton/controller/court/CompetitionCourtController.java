@@ -2,6 +2,7 @@ package com.badminton_manager.badminton.controller.court;
 
 import com.badminton_manager.badminton.dto.court.CompetitionCourtRequestDTO;
 import com.badminton_manager.badminton.dto.court.CompetitionCourtResponseDTO;
+import com.badminton_manager.badminton.dto.court.CompetitionCourtResultDTO;
 import com.badminton_manager.badminton.enums.CourtWinner;
 import com.badminton_manager.badminton.service.court.CompetitionCourtService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,6 +32,11 @@ public class CompetitionCourtController {
     @GetMapping("/{id}")
     public ResponseEntity<CompetitionCourtResponseDTO> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(courtService.getById(id));
+    }
+
+    @GetMapping("/{id}/result")
+    public ResponseEntity<CompetitionCourtResultDTO> getResult(@PathVariable UUID id) {
+        return ResponseEntity.ok(courtService.getResult(id));
     }
 
     @GetMapping("/code/{courtCode}")

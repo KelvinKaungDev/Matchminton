@@ -2,11 +2,16 @@ package com.badminton_manager.badminton.service.court;
 
 import com.badminton_manager.badminton.dto.court.CompetitionCourtRequestDTO;
 import com.badminton_manager.badminton.dto.court.CompetitionCourtResponseDTO;
+import com.badminton_manager.badminton.dto.court.CompetitionCourtResultDTO;
 import com.badminton_manager.badminton.enums.CourtStatus;
 import com.badminton_manager.badminton.enums.CourtWinner;
+import com.badminton_manager.badminton.enums.Team;
+import com.badminton_manager.badminton.enums.Tier;
 import com.badminton_manager.badminton.exception.ResourceNotFoundException;
 import com.badminton_manager.badminton.model.CompetitionCourt;
 import com.badminton_manager.badminton.model.CompetitionSession;
+import com.badminton_manager.badminton.model.Game;
+import com.badminton_manager.badminton.model.Player;
 import com.badminton_manager.badminton.model.User;
 import com.badminton_manager.badminton.repository.CompetitionCourtRepository;
 import com.badminton_manager.badminton.repository.CompetitionSessionRepository;
@@ -196,5 +201,59 @@ class CompetitionCourtServiceImplTest {
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(courtRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void getResult_proOrganizer_returnsTeamsAndScores() {
+        session.getOrganizer().setTier(Tier.pro);
+        court.setStatus(CourtStatus.finished);
+        court.setWinner(CourtWinner.teamA);
+
+        Player a = new Player();
+        a.setName("Alice");
+        a.setTeam(Team.teamA);
+        Player b = new Player();
+        b.setName("Bob");
+        b.setTeam(Team.teamB);
+        Game game = new Game();
+        game.setGameNumber(1);
+        game.setTeamAScore(21);
+        game.setTeamBScore(15);
+        game.setWinner(CourtWinner.teamA);
+
+        when(courtRepository.findById(courtId)).thenReturn(Optional.of(court));
+        when(playerRepository.findByCourtId(courtId)).thenReturn(List.of(a, b));
+        when(gameRepository.findByCourtIdOrderByGameNumberAsc(courtId)).thenReturn(List.of(game));
+
+        CompetitionCourtResultDTO result = courtService.getResult(courtId);
+
+        assertThat(result.isShareEnabled()).isTrue();
+        assertThat(result.getSessionName()).isEqualTo("Sunday Tournament");
+        assertThat(result.getWinner()).isEqualTo(CourtWinner.teamA);
+        assertThat(result.getTeamAPlayers()).containsExactly("Alice");
+        assertThat(result.getTeamBPlayers()).containsExactly("Bob");
+        assertThat(result.getGames()).hasSize(1);
+        assertThat(result.getGames().get(0).getTeamAScore()).isEqualTo(21);
+    }
+
+    @Test
+    void getResult_freeOrganizer_withholdsNamesAndScores() {
+        session.getOrganizer().setTier(Tier.free);
+        when(courtRepository.findById(courtId)).thenReturn(Optional.of(court));
+
+        CompetitionCourtResultDTO result = courtService.getResult(courtId);
+
+        assertThat(result.isShareEnabled()).isFalse();
+        assertThat(result.getTeamAPlayers()).isEmpty();
+        assertThat(result.getGames()).isEmpty();
+        verifyNoInteractions(playerRepository, gameRepository);
+    }
+
+    @Test
+    void getResult_notFound_throwsResourceNotFoundException() {
+        when(courtRepository.findById(courtId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> courtService.getResult(courtId))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }
